@@ -77,6 +77,40 @@ void onWiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
 
 /**
  * *******************************************************************
+ * @brief   Parse and validate a BSSID string into a byte array
+ * @param   bssidStr  MAC address string (format: "AA:BB:CC:DD:EE:FF")
+ * @param   bssid     output byte array (6 bytes)
+ * @return  true if valid, false otherwise
+ * *******************************************************************/
+static bool parseBSSID(const char *bssidStr, uint8_t *bssid) {
+  if (strlen(bssidStr) != 17) return false;
+  int pos = 0;
+  int matched = sscanf(bssidStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx%n",
+                       &bssid[0], &bssid[1], &bssid[2], &bssid[3], &bssid[4], &bssid[5], &pos);
+  return matched == 6 && pos == 17;
+}
+
+/**
+ * *******************************************************************
+ * @brief   Start WiFi connection, with optional BSSID locking
+ * @param   none
+ * @return  none
+ * *******************************************************************/
+static void beginWiFiConnection() {
+  uint8_t bssid[6];
+  if (strlen(config.wifi.bssid) == 17 && parseBSSID(config.wifi.bssid, bssid)) {
+    WiFi.begin(config.wifi.ssid, config.wifi.password, 0, bssid);
+    ESP_LOGI(TAG, "WiFi Mode STA - Trying connect to: %s (BSSID lock: %s)", config.wifi.ssid, config.wifi.bssid);
+  } else {
+    WiFi.begin(config.wifi.ssid, config.wifi.password);
+    ESP_LOGI(TAG, "WiFi Mode STA - Trying connect to: %s", config.wifi.ssid);
+  }
+  WiFi.hostname(config.wifi.hostname);
+  MDNS.begin(config.wifi.hostname);
+}
+
+/**
+ * *******************************************************************
  * @brief   check WiFi connection and automatic reconnect
  * @param   none
  * @return  none
@@ -90,10 +124,7 @@ void checkWiFi() {
     if (wifi_retry < 5) {
       wifi_retry++;
       WiFi.mode(WIFI_STA);
-      WiFi.begin(config.wifi.ssid, config.wifi.password);
-      WiFi.hostname(config.wifi.hostname);
-      MDNS.begin(config.wifi.hostname);
-      ESP_LOGI(TAG, "WiFi Mode STA - Trying connect to: %s", config.wifi.ssid);
+      beginWiFiConnection();
       ESP_LOGI(TAG, " - attempt: %i/5", wifi_retry);
     } else {
       ESP_LOGI(TAG, "Wifi connection not possible, esp rebooting...");
@@ -140,10 +171,7 @@ void setupWiFi() {
     WiFi.setAutoReconnect(true);
     WiFi.setSleep(WIFI_PS_NONE);
     esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
-    WiFi.begin(config.wifi.ssid, config.wifi.password);
-    WiFi.hostname(config.wifi.hostname);
-    MDNS.begin(config.wifi.hostname);
-    ESP_LOGI(TAG, "WiFi Mode STA - Trying connect to: %s", config.wifi.ssid);
+    beginWiFiConnection();
   }
 }
 
