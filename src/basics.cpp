@@ -1,6 +1,7 @@
 #include <ETH.h>
 #include <SPI.h>
 #include <basics.h>
+#include <esp_wifi.h>
 
 #ifndef ETH_PHY_TYPE
 #define ETH_PHY_TYPE ETH_PHY_W5500
@@ -67,6 +68,10 @@ void onWiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
   ESP_LOGI(TAG, "WiFi connected");
   snprintf(wifi.ipAddress, sizeof(wifi.ipAddress), "%s", WiFi.localIP().toString().c_str());
   ESP_LOGI(TAG, "IP address: %s", wifi.ipAddress);
+  uint8_t *bssid = WiFi.BSSID();
+  ESP_LOGI(TAG, "BSSID: %02X:%02X:%02X:%02X:%02X:%02X, Ch: %d, RSSI: %d dBm",
+           bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5],
+           (int)WiFi.channel(), (int)WiFi.RSSI());
   wifi.connected = true;
 }
 
@@ -133,6 +138,8 @@ void setupWiFi() {
     // connect to configured wifi AP
     WiFi.mode(WIFI_STA);
     WiFi.setAutoReconnect(true);
+    WiFi.setSleep(WIFI_PS_NONE);
+    esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
     WiFi.begin(config.wifi.ssid, config.wifi.password);
     WiFi.hostname(config.wifi.hostname);
     MDNS.begin(config.wifi.hostname);
