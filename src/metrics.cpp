@@ -7,6 +7,7 @@
 #include <esp_heap_caps.h>
 #include <esp_timer.h>
 #include <hardwareMetrics.h>
+#include <km271.h>
 #include <atomic>
 #include <memory>
 #include <new>
@@ -29,14 +30,19 @@ std::atomic<bool> enabled{false};
 
 struct CachedState {
   metrics::HardwareSnapshot hardware;
+  metrics::HeatingSnapshot heating;
   s_cfg_auth auth;
 };
 
 CachedState state;
 
-void sampleHardware(bool resetCpu = false) {
+void sampleMetrics(bool resetCpu = false) {
   CachedState next;
   next.auth = config.auth;
+  km271GetHeatingMetricsCopy(next.heating);
+  next.heating.circuitEnabled[0] = config.km271.use_hc1;
+  next.heating.circuitEnabled[1] = config.km271.use_hc2;
+  next.heating.hotWaterEnabled = config.km271.use_ww;
   auto &snapshot = next.hardware;
   snapshot.includeDeviceLabel = config.metrics.device_label;
   if (snapshot.includeDeviceLabel) {
@@ -86,11 +92,13 @@ void sampleHardware(bool resetCpu = false) {
 // sample cannot change a response that is still being transmitted.
 class MetricsResponse : public AsyncAbstractResponse {
 public:
-  explicit MetricsResponse(const metrics::HardwareSnapshot &snapshot) {
+  MetricsResponse(const metrics::HardwareSnapshot &snapshot, const metrics::HeatingSnapshot &heating) {
     _code = 200;
     _contentType = "text/plain; version=0.0.4; charset=utf-8";
-    const size_t length = metrics::hardwareMetricsSize(snapshot);
-    if (length == 0 || length >= metrics::RESPONSE_CAPACITY) {
+    const size_t hardwareLength = metrics::hardwareMetricsSize(snapshot);
+    const size_t heatingLength = metrics::heatingMetricsSize(heating, snapshot.device, snapshot.includeDeviceLabel);
+    const size_t length = hardwareLength + heatingLength;
+    if (hardwareLength == 0 || length >= metrics::RESPONSE_CAPACITY) {
       _code = 500;
       errorBody = "Metrics response exceeds buffer\n";
     } else {
@@ -99,8 +107,11 @@ public:
         _code = 503;
         errorBody = "Insufficient memory for metrics\n";
       } else {
-        _contentLength = metrics::formatHardwareMetrics(body.get(), length + 1, snapshot);
-        if (_contentLength != length) {
+        const size_t hardwareWritten = metrics::formatHardwareMetrics(body.get(), length + 1, snapshot);
+        const size_t heatingWritten = metrics::formatHeatingMetrics(body.get() + hardwareLength, heatingLength + 1,
+                                                                  heating, snapshot.device, snapshot.includeDeviceLabel);
+        _contentLength = length;
+        if (hardwareWritten != hardwareLength || heatingWritten != heatingLength) {
           _code = 500;
           errorBody = "Metrics formatting failed\n";
         }
@@ -172,7 +183,7 @@ void handleMetrics(AsyncWebServerRequest *request) {
   }
 
   current.hardware.sampleAgeUs = esp_timer_get_time() - current.hardware.uptimeUs;
-  auto *response = new (std::nothrow) MetricsResponse(current.hardware);
+  auto *response = new (std::nothrow) MetricsResponse(current.hardware, current.heating);
   if (response == nullptr) {
     portENTER_CRITICAL(&stateMux);
     responseInFlight = false;
@@ -206,7 +217,7 @@ void metricsCyclic() {
       if (otaActive.load(std::memory_order_relaxed)) {
         return;
       }
-      sampleHardware(true);
+      sampleMetrics(true);
       lastSampleMs = millis();
       enabled.store(true, std::memory_order_relaxed);
       server.begin();
@@ -223,7 +234,7 @@ void metricsCyclic() {
   const uint32_t now = millis();
   if (!otaActive.load(std::memory_order_relaxed) && static_cast<uint32_t>(now - lastSampleMs) >= SAMPLE_INTERVAL_MS) {
     lastSampleMs = now;
-    sampleHardware();
+    sampleMetrics();
   }
 }
 

@@ -36,6 +36,7 @@ s_km271_status kmStatus;        // All Status values
 s_km271_config_str kmConfigStr; // All Config values (String)
 s_km271_config_num kmConfigNum; // All Config values (Number)
 s_km271_alarm_str kmAlarmMsg;   // Alarm Messages
+static metrics::HeatingSnapshot heatingMetrics;
 
 // Status machine handling
 e_rxBlockState KmRxBlockState = KM_TSK_START; // The RX block state
@@ -255,6 +256,13 @@ void sendTxBlock(uint8_t *data, int len) {
  * @return  none
  * *******************************************************************/
 void parseInfo(uint8_t *data, int len) {
+
+  if (len < 3) {
+    return;
+  }
+  // Receipt tracking uses the existing decoder entry point, including the
+  // simulator. It allocates nothing and never changes the protocol state.
+  heatingMetrics.observe((static_cast<uint16_t>(data[0]) << 8) | data[1], data[2]);
 
   char t1[100] = {'\0'};
   char t2[100] = {'\0'};
@@ -1544,6 +1552,8 @@ e_ret km271GetStatusValueCopy(s_km271_status *pDest) {
   return RET_OK;
 }
 
+void km271GetHeatingMetricsCopy(metrics::HeatingSnapshot &destination) { destination = heatingMetrics; }
+
 /**
  * *******************************************************************
  * @brief   get a copy of the "config sttings structure"
@@ -1632,6 +1642,7 @@ e_ret km271ProtInit(int rxPin, int txPin) {
 
   // initialize structs
   memset((void *)&kmStatus, 0, sizeof(s_km271_status));
+  heatingMetrics = metrics::HeatingSnapshot{};
   memset((void *)&kmConfigStr, 0, sizeof(s_km271_config_str));
   memset((void *)&kmConfigNum, 0, sizeof(s_km271_config_num));
   return RET_OK;

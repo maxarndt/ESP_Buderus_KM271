@@ -5,8 +5,9 @@
 
 namespace metrics {
 
-// Allows a full-length, escaped optional device label on every series.
-constexpr size_t RESPONSE_CAPACITY = 6144;
+// Hardware plus heating, with a full-length escaped device label on every series.
+// Responses allocate their actual size, not this upper bound.
+constexpr size_t RESPONSE_CAPACITY = 20480;
 constexpr size_t CPU_COUNT = 2;
 
 struct HardwareSnapshot {

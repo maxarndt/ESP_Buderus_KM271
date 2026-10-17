@@ -613,7 +613,11 @@ Enable **Prometheus metrics** in settings first. The switch is persisted and tak
 without a reboot; the feature is disabled by default.
 VictoriaMetrics can scrape this endpoint directly every 30 seconds. It exposes heap usage and reserve,
 uptime, CPU frequency and estimated utilization per core, network status, and WiFi signal strength.
-Samples are refreshed every five seconds. Heating measurements will be added separately.
+Samples are refreshed every five seconds. The endpoint also exposes received outside,
+boiler, heating circuit and hot water temperatures and setpoints, pump commands,
+burner state and operating time, and documented fault flags. Disabled heating circuits
+and hot water are omitted, as are values not received since boot. No extra controller
+queries are generated.
 All metrics use the `km271_` prefix. The separate **Add device name as label** checkbox
 optionally adds the configured WiFi hostname as `device`; it is disabled by default.
 Firmware version and chip model are exposed on `km271_info`.

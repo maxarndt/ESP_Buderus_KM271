@@ -617,7 +617,11 @@ Aktiviere dazu **Prometheus-Metriken** in den Einstellungen. Der Schalter wird g
 und wirkt ohne Neustart; standardmäßig ist das Feature deaktiviert.
 VictoriaMetrics kann sie direkt alle 30 Sekunden abrufen. Erfasst werden Heap-Belegung und -Reserve,
 Uptime, CPU-Takt und geschätzte CPU-Auslastung je Kern sowie Netzwerkstatus und WLAN-Signalstärke.
-Die Messwerte werden alle fünf Sekunden aktualisiert; Heizungswerte folgen in einem späteren Schritt.
+Die Messwerte werden alle fünf Sekunden aktualisiert. Zusätzlich stehen empfangene Außen-,
+Kessel-, Heizkreis- und Warmwassertemperaturen samt Sollwerten, Pumpenansteuerungen,
+Brennerzustand und -betriebszeit sowie dokumentierte Störungsbits bereit. Deaktivierte
+Heizkreise und Warmwasser sowie seit dem Start noch nicht empfangene Werte werden
+ausgelassen. Zusätzliche Abfragen an die Heizungssteuerung erfolgen nicht.
 Alle Metriken verwenden das Präfix `km271_`. Die separate Checkbox **Gerätename als Label hinzufügen**
 ergänzt optional den konfigurierten WLAN-Hostnamen als `device`; standardmäßig ist sie ausgeschaltet.
 Firmwareversion und Chipmodell stehen zusätzlich in `km271_info`.

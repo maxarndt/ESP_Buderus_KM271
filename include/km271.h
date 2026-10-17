@@ -12,6 +12,7 @@
 //*****************************************************************************
 #pragma once
 #include <Arduino.h>
+#include <heatingMetrics.h>
 
 /* D E F I N E S ****************************************************/
 
@@ -335,6 +336,8 @@ void km271sendServiceCmd(uint8_t cmdPara[8]);
 bool km271GetLogMode();
 unsigned long km271GetTxBytes();
 unsigned long km271GetRxBytes();
+// Main-loop only: HTTP uses its own cached copy of this small snapshot.
+void km271GetHeatingMetricsCopy(metrics::HeatingSnapshot &destination);
 void km271SetDateTimeNTP();
 void km271SetDateTimeDTI(tm dti);
 void parseInfo(uint8_t *data, int len);
