@@ -1,0 +1,1885 @@
+{
+  "id": null,
+  "uid": "km271-prometheus",
+  "title": "KM271 · Heizung und ESP",
+  "description": "Heizbetrieb, Störungen und ESP-Ressourcen. Prometheus/VictoriaMetrics, 30-Sekunden-Scrapes. Heizungswerte sind die zuletzt empfangenen Reglerwerte; das Dashboard beurteilt keine KM271-Verbindungsgesundheit. Fehlende Daten bleiben unbekannt.",
+  "tags": [
+    "km271",
+    "heizung",
+    "victoriametrics"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": true,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "30s",
+      "1m",
+      "5m",
+      "15m"
+    ],
+    "time_options": [
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d"
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "job",
+        "label": "Job",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "cf52cqte7bojke"
+        },
+        "query": {
+          "query": "label_values(km271_info, job)",
+          "refId": "StandardVariableQuery"
+        },
+        "definition": "label_values(km271_info, job)",
+        "refresh": 1,
+        "sort": 1,
+        "multi": false,
+        "includeAll": false,
+        "options": [],
+        "current": {}
+      },
+      {
+        "name": "instance",
+        "label": "Gerät",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "cf52cqte7bojke"
+        },
+        "query": {
+          "query": "label_values(km271_info{job=~\"$job\"}, instance)",
+          "refId": "StandardVariableQuery"
+        },
+        "definition": "label_values(km271_info{job=~\"$job\"}, instance)",
+        "refresh": 1,
+        "sort": 1,
+        "multi": false,
+        "includeAll": false,
+        "options": [],
+        "current": {}
+      },
+      {
+        "name": "circuit",
+        "label": "Heizkreis",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "cf52cqte7bojke"
+        },
+        "query": {
+          "query": "label_values(km271_heating_circuit_flow_target_temperature_celsius{job=~\"$job\",instance=~\"$instance\"}, circuit)",
+          "refId": "StandardVariableQuery"
+        },
+        "definition": "label_values(km271_heating_circuit_flow_target_temperature_celsius{job=~\"$job\",instance=~\"$instance\"}, circuit)",
+        "refresh": 1,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "options": [],
+        "current": {
+          "text": "Alle",
+          "value": "$__all"
+        },
+        "allValue": ".*"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Metrik-Endpunkt",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "HTTP-Scrape durch VictoriaMetrics. Keine Aussage über die Kommunikation mit der Heizungssteuerung.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Nicht erreichbar",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Erreichbar",
+                  "color": "green"
+                }
+              }
+            },
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Keine Daten",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "up{job=~\"$job\",instance=~\"$instance\"}",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Aktive Störungsbits",
+      "type": "stat",
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Anzahl der aktuell gesetzten, gelieferten Störungsbits. Fehlende Bits werden nicht als 0 ergänzt.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Keine Daten",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum((km271_fault_active{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Brenner",
+      "type": "stat",
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Gemeldete Brenneransteuerung. Kein unabhängiger Flammennachweis.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Aus",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "Ein",
+                  "color": "orange"
+                }
+              }
+            },
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Keine Daten",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_burner_active{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "ESP-Laufzeit",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Zeit seit dem letzten ESP-Neustart. Snapshot im 5-Sekunden-Takt.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dtdurations",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Keine Daten",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_uptime_seconds{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Brennerlaufzeit · Zeitraum",
+      "type": "stat",
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Zuwachs des Reglerzählers im gewählten Zeitraum. Minutenauflösung; increase() berücksichtigt Zählerrücksetzungen und extrapoliert auf die Bereichsgrenzen.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dtdurations",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "mappings": [
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Keine Daten",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "increase(km271_burner_runtime_seconds_total{job=~\"$job\",instance=~\"$instance\"}[$__range])",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Heap frei",
+      "type": "stat",
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Freier Anteil des internen Heaps. Größter freier Block und Verlauf stehen im Ressourcenabschnitt.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "min": 0,
+          "max": 1,
+          "decimals": 1,
+          "mappings": [
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Keine Daten",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_heap_free_bytes{job=~\"$job\",instance=~\"$instance\"} / km271_heap_size_bytes{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 7,
+      "title": "Kessel · Ist und Soll",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Letzte empfangene Reglerwerte. Die Isttemperatur fehlt bei gemeldetem Fühlerfehler; Lücken werden nicht verbunden.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ist"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Soll"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    6
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "(km271_boiler_temperature_celsius{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Ist",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_boiler_target_temperature_celsius{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Soll",
+          "refId": "B",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Warmwasser · Ist und Soll",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 8,
+        "y": 4,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Nur bei aktiviertem Warmwasser und empfangenen Werten. Lücken und fehlende Werte sind kein Messwert 0.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ist"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Soll"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    6
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "(km271_hot_water_temperature_celsius{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Ist",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_hot_water_target_temperature_celsius{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Soll",
+          "refId": "B",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Außentemperatur",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 16,
+        "y": 4,
+        "w": 8,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Die gedämpfte Außentemperatur hilft, die Heizungsregelung nachzuvollziehen.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Gedämpft"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    6
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "(km271_outside_temperature_celsius{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Aktuell",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_outside_damped_temperature_celsius{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Gedämpft",
+          "refId": "B",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Heizkreis · Vorlauf Ist und Soll",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Nur ausgewählte und konfigurierte Heizkreise. Ist und Soll eines Kreises haben dieselbe Farbe; Sollwerte sind gestrichelt.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/^HK 1 /"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/^HK 2 /"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/ Soll$/"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    6
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "(km271_heating_circuit_flow_temperature_celsius{job=~\"$job\",instance=~\"$instance\",circuit=~\"$circuit\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "HK {{circuit}} Ist",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_heating_circuit_flow_target_temperature_celsius{job=~\"$job\",instance=~\"$instance\",circuit=~\"$circuit\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "HK {{circuit}} Soll",
+          "refId": "B",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Heizkreispumpen · Ansteuerung",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 6,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Gemeldete Pumpenansteuerung, keine gemessene elektrische Leistung.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "max": 1,
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_heating_circuit_pump_ratio{job=~\"$job\",instance=~\"$instance\",circuit=~\"$circuit\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "HK {{circuit}}",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Brenner · Zeitanteil",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 18,
+        "y": 12,
+        "w": 6,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Aus dem Betriebszeitzähler abgeleitete mittlere Einschaltdauer. Keine Modulationsleistung. Minutenauflösung macht kurze Intervalle unruhig; $__rate_interval nutzt mindestens vier Scrapes.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "axisSoftMax": 1
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(rate(km271_burner_runtime_seconds_total{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Zeitanteil",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "Brenner und Warmwasserpumpen",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 24,
+        "h": 6
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Gemeldete Schaltzustände. 30-Sekunden-Scrapes können kürzere Schaltvorgänge übersehen. Fehlende Daten werden nicht zu Aus umgedeutet.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Aus",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "Ein",
+                  "color": "orange"
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 90,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_burner_active{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Brenner",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_hot_water_pump_active{job=~\"$job\",instance=~\"$instance\",pump=\"charging\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Speicherladepumpe",
+          "refId": "B",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_hot_water_pump_active{job=~\"$job\",instance=~\"$instance\",pump=\"circulation\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Zirkulationspumpe",
+          "refId": "C",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "mergeValues": true,
+        "showValue": "never",
+        "alignValue": "center",
+        "rowHeight": 0.8,
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Störungen · Verlauf",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 24,
+        "h": 11
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Alle gelieferten Störungsbits der konfigurierten Komponenten. 0 = nicht gesetzt; 1 = aktiv. Fehlende Daten bleiben Lücken. Die Heizkreisauswahl oben filtert nur Vorlauf- und Pumpenpanels.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Nicht gesetzt",
+                  "color": "green"
+                },
+                "1": {
+                  "text": "AKTIV",
+                  "color": "red"
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 90,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_fault_active{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "{{component}} / {{fault}}",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "mergeValues": true,
+        "showValue": "never",
+        "alignValue": "center",
+        "rowHeight": 0.8,
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "ESP · Ressourcen und Diagnose",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 37,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 16,
+      "title": "CPU-Auslastung je Kern",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Geschätzte Scheduler-Auslastung aus Idle-Zählern über jeweils etwa fünf Sekunden. Kein separater Nachweis des Metrik-Overheads.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "max": 1,
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_cpu_usage_ratio{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Kern {{core}}",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "title": "Interner Heap",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 38,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Freier Heap und größter freier Block zeigen Reserve und Fragmentierung. Der Minimumwert kann nach einem ESP-Neustart wieder steigen. Keine Stapelung.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Gesamt"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "gray"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    6
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Minimum seit Start"
+            },
+            "properties": [
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    4,
+                    4
+                  ]
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "(km271_heap_free_bytes{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Frei",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_heap_largest_free_block_bytes{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Größter freier Block",
+          "refId": "B",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_heap_min_free_bytes{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Minimum seit Start",
+          "refId": "C",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_heap_used_bytes{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Belegt",
+          "refId": "D",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        },
+        {
+          "expr": "(km271_heap_size_bytes{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Gesamt",
+          "refId": "E",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "title": "WLAN-Signal",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 46,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Weniger negative Werte bedeuten ein stärkeres Signal. Bei reinem Ethernet-Betrieb fehlt die Reihe erwartungsgemäß.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dBm",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_wifi_rssi_dbm{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "RSSI",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "title": "Alter des ESP-Snapshots",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 46,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Zeit seit der letzten ESP-internen Erfassung; normalerweise unter fünf Sekunden. Kein Telegrammalter und kein Gesundheitsnachweis der Heizungsanbindung.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "axisPlacement": "auto",
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_metrics_sample_age_seconds{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "Snapshotalter",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "min",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 20,
+      "title": "Netzwerkschnittstellen",
+      "type": "state-timeline",
+      "gridPos": {
+        "x": 0,
+        "y": 53,
+        "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Gemeldeter IP-Status je Schnittstelle. Bei ausgefallenem Scrape entstehen Lücken.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Keine IP",
+                  "color": "gray"
+                },
+                "1": {
+                  "text": "IP vorhanden",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "custom": {
+            "lineWidth": 0,
+            "fillOpacity": 90,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_network_connected{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "{{interface}}",
+          "refId": "A",
+          "instant": false,
+          "range": true,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "mergeValues": true,
+        "showValue": "never",
+        "alignValue": "center",
+        "rowHeight": 0.8,
+        "legend": {
+          "showLegend": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 21,
+      "title": "Firmware und Chip",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 53,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Firmware- und Chipmetadaten des ausgewählten ESP.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Keine Daten",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_info{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "{{firmware_version}} · {{chip_model}}",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "id": 22,
+      "title": "CPU-Takt",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 53,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cf52cqte7bojke"
+      },
+      "description": "Aktuell gemeldete CPU-Frequenz. Nicht mit der CPU-Auslastung verwechseln.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "hertz",
+          "noValue": "Keine Daten",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "Keine Daten",
+                  "color": "gray"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "(km271_cpu_frequency_hertz{job=~\"$job\",instance=~\"$instance\"}) and on(job,instance) (up{job=~\"$job\",instance=~\"$instance\"} == 1)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false,
+          "editorMode": "code",
+          "interval": "30s"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    }
+  ]
+}
