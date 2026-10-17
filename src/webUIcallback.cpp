@@ -198,7 +198,7 @@ void webCallback(const char *elementId, const char *value) {
 
   // WiFi
   if (strcmp(elementId, "cfg_wifi_hostname") == 0) {
-    snprintf(config.wifi.hostname, sizeof(config.wifi.hostname), value);
+    snprintf(config.wifi.hostname, sizeof(config.wifi.hostname), "%s", value);
   }
   if (strcmp(elementId, "cfg_wifi_ssid") == 0) {
     snprintf(config.wifi.ssid, sizeof(config.wifi.ssid), value);
@@ -227,7 +227,7 @@ void webCallback(const char *elementId, const char *value) {
     config.eth.enable = EspStrUtil::stringToBool(value);
   }
   if (strcmp(elementId, "cfg_eth_hostname") == 0) {
-    snprintf(config.eth.hostname, sizeof(config.eth.hostname), value);
+    snprintf(config.eth.hostname, sizeof(config.eth.hostname), "%s", value);
   }
   if (strcmp(elementId, "cfg_eth_gpio_sck") == 0) {
     config.eth.gpio_sck = strtoul(value, NULL, 10);
@@ -261,6 +261,14 @@ void webCallback(const char *elementId, const char *value) {
   }
   if (strcmp(elementId, "cfg_eth_dns") == 0) {
     snprintf(config.eth.dns, sizeof(config.eth.dns), value);
+  }
+
+  // Prometheus metrics
+  if (strcmp(elementId, "cfg_metrics_enable") == 0) {
+    config.metrics.enable = EspStrUtil::stringToBool(value);
+  }
+  if (strcmp(elementId, "cfg_metrics_device_label") == 0) {
+    config.metrics.device_label = EspStrUtil::stringToBool(value);
   }
 
   // Authentication

@@ -90,6 +90,7 @@ Diese kann über den folgenden Link aufgerufen werden: [WebUI-DEMO](https://dewe
   - [Config and Status Werte](#config-and-status-values)
   - [Kommandos](#commands)
   - [Home Assistant](#home-assistant)
+- [Hardware-Metriken](#hardware-metriken)
 - [Optional Messaging](#optional-messaging)
   - [Pushover](#pushover)
   - [WebUI-Logger](#webui-logger)
@@ -606,6 +607,25 @@ siehe auch die offizielle Dokumentation: https://www.home-assistant.io/integrati
 
 In den mqtt-Einstellungen kannst du die "Erkennungsfunktion" aktivieren und auch das mqtt-Topic und den Gerätenamen für Home Assistant festlegen  
 <img src="Doc/mqtt_ha_3.png" alt="mqtt_ha1" width="50%">
+
+-----
+
+# Hardware-Metriken
+
+Unter `http://<ESP-IP>:9100/metrics` stehen Hardware-Metriken im Prometheus-Textformat bereit.
+Aktiviere dazu **Prometheus-Metriken** in den Einstellungen. Der Schalter wird gespeichert
+und wirkt ohne Neustart; standardmäßig ist das Feature deaktiviert.
+VictoriaMetrics kann sie direkt alle 30 Sekunden abrufen. Erfasst werden Heap-Belegung und -Reserve,
+Uptime, CPU-Takt und geschätzte CPU-Auslastung je Kern sowie Netzwerkstatus und WLAN-Signalstärke.
+Die Messwerte werden alle fünf Sekunden aktualisiert; Heizungswerte folgen in einem späteren Schritt.
+Alle Metriken verwenden das Präfix `km271_`. Die separate Checkbox **Gerätename als Label hinzufügen**
+ergänzt optional den konfigurierten WLAN-Hostnamen als `device`; standardmäßig ist sie ausgeschaltet.
+Firmwareversion und Chipmodell stehen zusätzlich in `km271_info`.
+
+Bei aktivierter WebUI-Authentifizierung verwendet der Endpunkt dieselben Zugangsdaten über HTTP Basic Auth.
+Im Setup-Modus wird der Metrik-Server nicht gestartet.
+
+Siehe [Metriken, VictoriaMetrics-Konfiguration und Tests](Doc/metrics/README.md).
 
 -----
 

@@ -4,6 +4,7 @@
 #include <config.h>
 #include <km271.h>
 #include <message.h>
+#include <metrics.h>
 #include <mqtt.h>
 #include <oilmeter.h>
 #include <sensor.h>
@@ -73,12 +74,14 @@ void setup() {
 
   // Setup OTA
   ArduinoOTA.onStart([]() {
+    metricsSetOtaActive(true);
     ESP_LOGI(TAG, "OTA-started");
     storeData();   // store Data before update
     wdt.disable(); // disable watchdog timer
     ota.setActive(true);
   });
   ArduinoOTA.onEnd([]() {
+    metricsSetOtaActive(false);
     ESP_LOGI(TAG, "OTA-finished");
     if (!setupMode) {
       wdt.enable();
@@ -86,6 +89,7 @@ void setup() {
     ota.setActive(false);
   });
   ArduinoOTA.onError([](ota_error_t error) {
+    metricsSetOtaActive(false);
     ESP_LOGI(TAG, "OTA-error");
     if (!setupMode) {
       wdt.enable();
@@ -113,6 +117,9 @@ void setup() {
 
   // telnet Setup
   setupTelnet();
+
+  // Hardware metrics for Prometheus / VictoriaMetrics
+  metricsSetup();
 }
 
 /**
@@ -216,6 +223,8 @@ void loop() {
       }
     }
   }
+
+  metricsCyclic();
 
   main_reboot = false; // reset reboot flag
 }

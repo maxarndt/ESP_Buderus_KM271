@@ -2,6 +2,14 @@
 // localization texts
 // --------------------------------------
 const user_translations = {
+  prometheus_metrics: {
+    de: "Prometheus-Metriken",
+    en: "Prometheus metrics",
+  },
+  metrics_device_label: {
+    de: "Gerätename als Label hinzufügen",
+    en: "Add device name as label",
+  },
   control: {
     de: "Bedienung",
     en: "Control",

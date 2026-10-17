@@ -5,6 +5,7 @@
 #include <km271.h>
 #include <language.h>
 #include <message.h>
+#include <metrics.h>
 #include <oilmeter.h>
 #include <sensor.h>
 #include <simulation.h>
@@ -49,6 +50,7 @@ void webUISetup() {
   webUI.setCallbackOta([](EspWebUI::otaStatus otaState, const char *msg) {
     switch (otaState) {
     case EspWebUI::OTA_BEGIN:
+      metricsSetOtaActive(true);
       ota.setActive(true);
       wdt.disable();
       break;
@@ -56,12 +58,14 @@ void webUISetup() {
       webUI.wsUpdateOTAprogress(msg);
       break;
     case EspWebUI::OTA_FINISH:
+      metricsSetOtaActive(false);
       ota.setActive(false);
       wdt.enable();
       webUI.wsUpdateOTAprogress("100");
       webUI.wsUpdateWebDialog("ota_update_done_dialog", "open");
       break;
     case EspWebUI::OTA_ERROR:
+      metricsSetOtaActive(false);
       ota.setActive(false);
       wdt.enable();
       webUI.wsUpdateWebText("p00_ota_upd_err", msg, false);
@@ -80,6 +84,8 @@ void webUISetup() {
       configLoadFromFile(); // load configuration
       webUI.wsUpdateWebLanguage(LANG::CODE[config.lang]);
       webUI.wsLoadConfigWebUI(); // update webUI settings
+      webUI.wsUpdateWebState("cfg_metrics_enable", config.metrics.enable);
+      webUI.wsUpdateWebState("cfg_metrics_device_label", config.metrics.device_label);
       break;
     case EspWebUI::UPLOAD_ERROR:
       webUI.wsUpdateWebText("upload_status_txt", msg, false);

@@ -90,6 +90,7 @@ This can be accessed via the following link: [WebUI-DEMO](https://dewenni.github
   - [Config and Status values](#config-and-status-values)
   - [Commands](#commands)
   - [Home Assistant](#home-assistant)
+- [Hardware metrics](#hardware-metrics)
 - [Optional Messaging](#optional-messaging)
   - [Pushover](#pushover)
   - [WebUI-Logger](#webui-logger)
@@ -602,6 +603,25 @@ see also the official documentation: https://www.home-assistant.io/integrations/
 
 In the mqtt settings you can activate the discovery function and also set the mqtt discovery topic and the device name for Home Assistant  
 <img src="Doc/mqtt_ha_3.png" alt="mqtt_ha1" width="50%">
+
+-----
+
+# Hardware metrics
+
+Hardware metrics are available at `http://<ESP-IP>:9100/metrics` in Prometheus text format.
+Enable **Prometheus metrics** in settings first. The switch is persisted and takes effect
+without a reboot; the feature is disabled by default.
+VictoriaMetrics can scrape this endpoint directly every 30 seconds. It exposes heap usage and reserve,
+uptime, CPU frequency and estimated utilization per core, network status, and WiFi signal strength.
+Samples are refreshed every five seconds. Heating measurements will be added separately.
+All metrics use the `km271_` prefix. The separate **Add device name as label** checkbox
+optionally adds the configured WiFi hostname as `device`; it is disabled by default.
+Firmware version and chip model are exposed on `km271_info`.
+
+When WebUI authentication is enabled, the endpoint uses the same credentials with HTTP Basic Auth.
+The metrics server is not started in setup mode.
+
+See [metrics, VictoriaMetrics configuration, and tests](Doc/metrics/README.md).
 
 -----
 

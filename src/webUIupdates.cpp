@@ -80,6 +80,8 @@ void updateAllElements() {
   updateSensorElements(true);
   webUI.wsUpdateWebLanguage(LANG::CODE[config.lang]);
   webUI.wsShowElementClass("simModeBar", config.sim.enable);
+  webUI.wsUpdateWebState("cfg_metrics_enable", config.metrics.enable);
+  webUI.wsUpdateWebState("cfg_metrics_device_label", config.metrics.device_label);
 
   if (setupMode) {
     webUI.wsShowElementClass("setupModeBar", true);

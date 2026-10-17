@@ -275,6 +275,10 @@ void configInitValue() {
   config.mqtt.enable = false;
   snprintf(config.mqtt.ha_topic, sizeof(config.mqtt.ha_topic), "homeassistant");
 
+  // Prometheus metrics are opt-in, including configurations from older firmware.
+  config.metrics.enable = false;
+  config.metrics.device_label = false;
+
   // NTP
   snprintf(config.ntp.server, sizeof(config.ntp.server), "de.pool.ntp.org");
   snprintf(config.ntp.tz, sizeof(config.ntp.tz), "CET-1CEST,M3.5.0,M10.5.0/3");
@@ -371,6 +375,9 @@ void configSaveToFile() {
   doc["mqtt"]["ha_enable"] = config.mqtt.ha_enable;
   doc["mqtt"]["ha_topic"] = config.mqtt.ha_topic;
   doc["mqtt"]["ha_device"] = config.mqtt.ha_device;
+
+  doc["metrics"]["enable"] = config.metrics.enable;
+  doc["metrics"]["device_label"] = config.metrics.device_label;
 
   doc["ntp"]["enable"] = config.ntp.enable;
   doc["ntp"]["server"] = config.ntp.server;
@@ -550,6 +557,9 @@ void configLoadFromFile() {
     config.mqtt.ha_enable = doc["mqtt"]["ha_enable"];
     EspStrUtil::readJSONstring(config.mqtt.ha_topic, sizeof(config.mqtt.ha_topic), doc["mqtt"]["ha_topic"]);
     EspStrUtil::readJSONstring(config.mqtt.ha_device, sizeof(config.mqtt.ha_device), doc["mqtt"]["ha_device"]);
+
+    config.metrics.enable = doc["metrics"]["enable"] | false;
+    config.metrics.device_label = doc["metrics"]["device_label"] | false;
 
     config.ntp.enable = doc["ntp"]["enable"];
     EspStrUtil::readJSONstring(config.ntp.server, sizeof(config.ntp.server), doc["ntp"]["server"]);

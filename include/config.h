@@ -91,6 +91,11 @@ struct s_cfg_ntp {
   char tz[128] = {"CET-1CEST,M3.5.0,M10.5.0/3"};
 };
 
+struct s_cfg_metrics {
+  bool enable = false;
+  bool device_label = false;
+};
+
 struct s_cfg_gpio {
   int led_wifi;
   int led_heartbeat;
@@ -149,6 +154,7 @@ struct s_config {
   s_cfg_wifi wifi;
   s_cfg_eth eth;
   s_cfg_mqtt mqtt;
+  s_cfg_metrics metrics;
   s_cfg_ntp ntp;
   s_cfg_gpio gpio;
   s_cfg_km271 km271;
